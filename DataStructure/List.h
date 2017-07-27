@@ -293,5 +293,91 @@ Status LinkList<T>::GetElem(LinkList & L, int index, T & e)
 }
 
 #pragma endregion LinkList
-
+#pragma region StaticLinkList
+#define MAX_SIZE 1000
+template <class T>
+struct SLNode{
+	T elem;
+	int next_cur;
+};
+template <class T>
+class SLList {
+private:
+	SLNode* head;
+	int length;
+	int* free_list;
+	int free_cur;
+public:
+	SLList() {
+		head = NULL;
+		length = 0;
+		free_list = NULL;
+		free_cur = 0;
+	}
+	~SLList() {
+		if (head != NULL) {
+			delete[] head;
+			head = NULL;
+			length = 0;
+			delete[] free_list;
+			free_list = NULL;
+			free_cur = 0;
+		}
+	}
+	Status InitList_SLList(SSList &L) {
+		L.head = new SLNode[MAX_SIZE];
+		L.length = 0;
+		free_list = new int[MAX_SIZE];
+		free_cur = 0;
+		for (int i = 0; i < MAX_SIZE; i++) {
+			free_list[i] = i + 1;
+			L.head[i].next_cur = -1;
+		}
+		free_list[MAX_SIZE - 1] = -1;
+		L.head[0].next_cur = free_list[free_cur];
+	}
+	Status InsertList_SLList(SSList &L, int index, T e) {
+		if (L.head != NULL) {
+			if (index < 1 || index > L.length + 1) {
+				return ERROR;
+			}
+			int t_cur = 0;
+			int prior_cur;
+			for (int i = 0; i < index; i++) {
+				prior_cur = t_cur;
+				t_cur = L.head[t_cur].next_cur;
+			}
+			L.head[prior_cur].next_cur = free_list[free_cur];
+			L.head[free_list[free_cur]].elem = e;
+			L.head[free_list[free_cur]].next_cur = t_cur;
+			++free_cur;
+			--L.length;
+		}
+		else {
+			return ERROR;
+		}
+	}
+	Status DeleteList_SLList(SSList &L, int index, T &e) {
+		if (L.head != NULL) {
+			if (index < 1 || index > L.length) {
+				return ERROR;
+			}
+			int t_cur = 0;
+			int prior_cur;
+			for (int i = 0; i < index; i++) {
+				prior_cur = t_cur;
+				t_cur = L.head[t_cur].next_cur;
+			}
+			L.head[prior_cur].next_cur = L.head[t_cur].next_cur;
+			e = L.head[t_cur].elem;
+			free_list[free_cur - 1] = L.head[t_cur];
+			--free_cur;
+			--L.length;
+		}
+		else {
+			return ERROR;
+		}
+	}
+};
+#pragma endregion StaticLinkList
 #endif
